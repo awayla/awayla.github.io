@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dolmetscher und Übersetzer für Somali-Deutsch</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,10 +76,9 @@
             padding: 10px;
             border-left: 5px solid #4CAF50;
         }
-        .calendar iframe {
+        .calendar {
             width: 100%;
             height: 600px;
-            border: none;
         }
         .contact p {
             margin: 10px 0;
@@ -123,7 +124,7 @@
         </section>
         <section id="calendar" class="calendar">
             <h2>Kalender</h2>
-            <iframe src="https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=Europe/Berlin"></iframe>
+            <div id='calendar'></div>
         </section>
         <section id="contact" class="contact">
             <h2>Kontakt</h2>
@@ -134,5 +135,56 @@
     <footer>
         <p>&copy; 2025 Herr Wayla. Alle Rechte vorbehalten.</p>
     </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                editable: true,
+                selectable: true,
+                events: loadEvents(),
+                select: function(info) {
+                    var title = prompt('Termin Titel:');
+                    var eventData;
+                    if (title) {
+                        eventData = {
+                            title: title,
+                            start: info.startStr,
+                            end: info.endStr
+                        };
+                        calendar.addEvent(eventData);
+                        saveEvent(eventData);
+                    }
+                    calendar.unselect();
+                },
+                eventClick: function(info) {
+                    if (confirm('Möchten Sie diesen Termin löschen?')) {
+                        info.event.remove();
+                        deleteEvent(info.event);
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+
+        function loadEvents() {
+            var events = localStorage.getItem('calendarEvents');
+            return events ? JSON.parse(events) : [];
+        }
+
+        function saveEvent(event) {
+            var events = loadEvents();
+            events.push(event);
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+        }
+
+        function deleteEvent(event) {
+            var events = loadEvents();
+            events = events.filter(e => e.start !== event.startStr || e.title !== event.title);
+            localStorage.setItem('calendarEvents', JSON.stringify(events));
+        }
+    </script>
 </body>
 </html>
